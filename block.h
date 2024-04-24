@@ -58,18 +58,18 @@ struct dirEntry
  *
  */
 class Block {
-public:
-	Block();			// Constructeur par défaut
-    Block(size_t td);	// Constructeur pour initialiser m_type_donnees
-    ~Block();			// Destructeur
+	public:
+		Block();			// Constructeur par défaut
+		Block(size_t td);	// Constructeur pour initialiser m_type_donnees
+		~Block();			// Destructeur
 
-private:
-	// Il est interdit de modifier ce modèle d'implémentation (i.e. les types des membres privés)!
-	size_t m_type_donnees; 		// peut être S_IFIL, S_IFBL, S_IFIN ou S_IFDE
-    std::vector<bool> m_bitmap;	// pour stocker la liste des blocks libres ou les inodes libres
-    iNode * m_inode;			// pour stocker les métadonnées d'un fichier ou d'un répertoire
-    std::vector<dirEntry*> m_dirEntry;	// pour stocker la liste des dirEntry (les informations d'un répertoire)
-    friend class DisqueVirtuel;	// La classe DisqueVirtuel est amie pour avoir accès à la partie privée !
+	private:
+		// Il est interdit de modifier ce modèle d'implémentation (i.e. les types des membres privés)!
+		size_t m_type_donnees; 		// peut être S_IFIL, S_IFBL, S_IFIN ou S_IFDE
+		std::vector<bool> m_bitmap;	// pour stocker la liste des blocks libres ou les inodes libres
+		iNode * m_inode;			// pour stocker les métadonnées d'un fichier ou d'un répertoire
+		std::vector<dirEntry*> m_dirEntry;	// pour stocker la liste des dirEntry (les informations d'un répertoire)
+		friend class DisqueVirtuel;	// La classe DisqueVirtuel est amie pour avoir accès à la partie privée !
 };
 
 }//Fin du namespace

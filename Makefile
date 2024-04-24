@@ -7,7 +7,7 @@ main.o: main.cpp
 	g++ -c main.cpp -std=c++11
 
 disqueVirtuel.o: disqueVirtuel.cpp
-	g++ -c C:\Users\giova\Downloads\CodeTp3\CodeTp3\disqueVirtuel.cpp -std=c++11
+	g++ -c disqueVirtuel.cpp -std=c++11
 
 block.o: block.cpp
 	g++ -c block.cpp -std=c++11 
