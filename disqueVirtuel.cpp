@@ -28,15 +28,11 @@ namespace TP3
 
 		int DisqueVirtuel::firstBlockFree()
 		{
-
-			for(int i=23; i < N_BLOCK_ON_DISK; i++)
+			for(int i = 23; i < N_BLOCK_ON_DISK; i++)
 			{
-				if(m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[i]==false)
-				{
+				if(m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[i] == false) {
 					continue;
-				}
-				else
-				{
+				} else {
 					return i;
 				}
 			}
@@ -44,15 +40,12 @@ namespace TP3
 		}
 		int DisqueVirtuel::firstInodeFree()
 		{
-			for(int i=0; i < N_INODE_ON_DISK; i++)
+			for(int i = 0; i < N_INODE_ON_DISK; i++)
 			{
 
-				if(m_blockDisque[FREE_INODE_BITMAP].m_bitmap[i] ==false)
-				{
+				if(m_blockDisque[FREE_INODE_BITMAP].m_bitmap[i] == false) {
 					continue;
-				}
-				else
-				{
+				} else {
 					return i;
 				}
 			}
@@ -67,45 +60,42 @@ namespace TP3
 
 			while (std::getline(tokenStream, token, '/')) {
 				// Ajouter le token (élément) au vecteur
-				if (token != ""){
-				dir.push_back(token);
-				std::cout << token << std::endl;
-				}
-				else{
-				continue;
+				if (token != "") {
+					dir.push_back(token);
+					std::cout << "Partie du path trouvée : " << token << std::endl;
+				} else {
+					continue;
 				}
 
 			}
 			auto rootdir = m_blockDisque[5].m_dirEntry;
 			bool Found = false;
 			int SelectIndex =0;
-			for(int i=0; i < dir.size(); i++){
-				for(int j =0; j < rootdir.size(); j++)
+			for (int i = 0; i < dir.size(); i++)
+			{
+				for (int j = 0; j < rootdir.size(); j++)
 				{
-					if(rootdir[j] -> m_filename == dir[i])
-					{
-						if( i == dir.size()-1)
-						{
-							std::cout << "trouve" << std::endl;
+					if (rootdir[j] -> m_filename == dir[i]) {
+						if (i == dir.size() - 1) {
+							std::cout << "Fichier/Dossier trouvé dans un dossier parent : " << dir[i] << std::endl;
 							Found = true;
 						}
-						SelectIndex = rootdir[j]->m_iNode+4;
-						rootdir = m_blockDisque[rootdir[j]->m_iNode+4].m_dirEntry;
+						SelectIndex = rootdir[j]->m_iNode + 4;
+						rootdir = m_blockDisque[rootdir[j]->m_iNode + 4].m_dirEntry;
 						break;
 					}
 				}
 			}
 			if (!Found) {
-				std::cout << "Non existant" << std::endl;
+				std::cout << "Le dossier/fichier n'existe pas encore" << std::endl;
 				return NULL;
-			}
-			else{
-			std::cout << "Block est la" << std::endl;
-			return &m_blockDisque[SelectIndex];
+			} else {
+				std::cout << "Le dossier/fichier existe, return Block" << std::endl;
+				return &m_blockDisque[SelectIndex];
 			}
 		}
 		// Méthodes demandées
-		int DisqueVirtuel::bd_FormatDisk(){
+		int DisqueVirtuel::bd_FormatDisk() {
 
 			//Init la bitmap des bloc libres
 			m_blockDisque[FREE_BLOCK_BITMAP].m_type_donnees = S_IFBL; //on met la valeur 0010 dans le block 2
@@ -116,11 +106,12 @@ namespace TP3
 			m_blockDisque[FREE_INODE_BITMAP].m_bitmap[0] = false;//premier element est faux (boot)
 
 			//On set tous les block 0 a 23 comme occupe et l on cree un i-node
-			for(int i = 0; i<24;i++){
+			for (int i = 0; i < 24;i++)
+			{
 				m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[i] = false;
-				if(i>3){
-				m_blockDisque[i].m_type_donnees = S_IFIN;
-				m_blockDisque[i].m_inode = new iNode(i - 4, S_IFREG, 0, 0, 0); //par defaut on dit que cest des fichiers S_IFRED
+				if (i > 3){
+					m_blockDisque[i].m_type_donnees = S_IFIN;
+					m_blockDisque[i].m_inode = new iNode(i - 4, S_IFREG, 0, 0, 0); //par defaut on dit que cest des fichiers S_IFRED
 				}
 			}
 			//on init le repo racine i-node 1
@@ -136,26 +127,55 @@ namespace TP3
 			return "0";
 		};
 
-		int DisqueVirtuel::DisqueVirtuel::bd_mkdir(const std::string& p_DirName){
-			return 0;
+		int DisqueVirtuel::DisqueVirtuel::bd_mkdir(const std::string& p_DirName) {
+			if (SelectBlock(p_DirName) == NULL) {
+				// Ne fonctionne que pour les dossiers simples pour l'instant.
+				// Ex : mkdir test, mais pas mkdir test/txt
+				std::cout << "On veut créer le dossier " << p_DirName << std::endl;
+				int premierLibreBlock = firstBlockFree();
+				std::cout << "Prochain block libre : " << firstBlockFree() << std::endl;
+				if (premierLibreBlock != 0) {
+					int premierLibreInode = firstInodeFree();
+					std::cout << "Prochain inode libre : " << firstInodeFree() << std::endl;
+					// Ajouter le dossier
+					m_blockDisque[premierLibreInode + 4].m_inode = new iNode(premierLibreInode, S_IFDIR, 1, 0, premierLibreBlock);//2 entr/ taille 56octes (deux liens)
+					m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(2);
+					m_blockDisque[premierLibreInode + 4].m_dirEntry[0] = new dirEntry(premierLibreInode, p_DirName);
+					m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[premierLibreBlock ] = false;
+					m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode ] = false;
+
+					std::cout << "Dossier créé dans le root" << std::endl;
+					//on va chercher le parent
+					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
+					//ajout dans le repo parent
+					m_blockDisque[5].m_dirEntry.push_back(new dirEntry(premierLibreInode, p_DirName));
+					m_blockDisque[5].m_inode->st_size += 28; // A changer vu que c'est un repo ? 
+					m_blockDisque[5].m_inode->st_nlink += 1;
+				};
+				return 1;
+			} else {
+				std::cout << "ERREUR : Le dossier " << p_DirName << "existe déjà." << std::endl;
+				return 0;
+			}
 		};
 		int DisqueVirtuel::bd_create(const std::string& p_FileName){
 
-			if(SelectBlock(p_FileName)==NULL)
-			{
+			if (SelectBlock(p_FileName) == NULL) {
 				int indexSub = p_FileName.find_last_of("/");
 				auto parentFileName = p_FileName.substr(0, indexSub);
-				auto ChildFileName = p_FileName.substr(indexSub+1);
-				std::cout << "papa" << std::endl;
-				std::cout <<  parentFileName << std::endl;
-				std::cout << "Creation file debute" << std::endl;
+				auto ChildFileName = p_FileName.substr(indexSub + 1);
+				std::cout << "Dossier parent détecté : " << parentFileName << std::endl;
+
+				if (parentFileName != "" && SelectBlock(parentFileName) == NULL) {
+					std::cout << "ERREUR : Le dossier parent " << parentFileName << " n'existe pas." << std::endl;
+					return 0;
+				}
+
 				int premierLibreBlock = firstBlockFree();
-				std::cout << "Block ";
-				std::cout << firstBlockFree()<< std::endl;
-				if(premierLibreBlock!=0)
-				{
-					std::cout << "Inode ";
-					std::cout << firstInodeFree()<< std::endl;
+				std::cout << "Premier block libre : " << firstBlockFree()<< std::endl;
+
+				if (premierLibreBlock != 0) {
+					std::cout << "Premier inode disponible : " << firstInodeFree()<< std::endl;
 					int premierLibreInode = firstInodeFree();
 					//ajouter fichier
 					m_blockDisque[premierLibreInode + 4].m_inode = new iNode(premierLibreInode, S_IFREG, 1, 0, premierLibreBlock);//2 entr/ taille 56octes (deux liens)
@@ -165,19 +185,16 @@ namespace TP3
 					m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode ] = false;
 
 					//mon edge case parent est root
-					if(parentFileName==""){
-						std::cout << "Entre cas limite"<< std::endl;
+					if (parentFileName == "") {
+						std::cout << "Le fichier est créé dans le dossier root" << std::endl;
 						//on va chercher le parent
 						m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
 						//ajout dans le repo parent
 						m_blockDisque[5].m_dirEntry.push_back(new dirEntry(premierLibreInode, ChildFileName));
 						m_blockDisque[5].m_inode->st_size += 28;
 						m_blockDisque[5].m_inode->st_nlink += 1;
-
-					}
-
-					else{
-						std::cout << "Entre cas commun"<< std::endl;
+					} else {
+						std::cout << "Le fichier est créé dans un dossier parent : " << parentFileName << std::endl;
 						auto parentSelect = SelectBlock(parentFileName);
 						//on va chercher le parent
 						m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(parentSelect->m_inode->st_ino, parentSelect->m_dirEntry[1]->m_filename);
@@ -187,7 +204,6 @@ namespace TP3
 						parentSelect->m_inode->st_size += 28;
 						parentSelect->m_inode->st_nlink += 1;
 					}
-					std::cout << "LienParent ";
 					std::cout << "Creation reussite" << std::endl;
 				};
 
@@ -198,4 +214,4 @@ namespace TP3
 			//Verifier que le nom existe pas deja
 			return 0;
 		};
-}//Fin du namespace
+}
