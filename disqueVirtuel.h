@@ -1,5 +1,5 @@
 /**
- * \file disqueVirtuel.h
+* \file disqueVirtuel.h
  * \brief Gestion d'un disque virtuel.
  * \author GLO-2001
  * \version 0.1
@@ -24,26 +24,29 @@ namespace TP3
 #define BASE_BLOCK_INODE  4     // bloc de depart ou les i-nodes sont stockes sur disque
 #define ROOT_INODE        1     // numero du i-node correspondant au repertoire racine
 
-class DisqueVirtuel {
-public:
-	DisqueVirtuel();
-	~DisqueVirtuel();
+	class DisqueVirtuel {
+	public:
+		DisqueVirtuel();
+		~DisqueVirtuel();
+		//Methodes auxiliares
+		Block *SelectBlock(const std::string& Location);
+		int firstBlockFree();
+		int firstInodeFree();
+		// Méthodes demandées
+		int bd_FormatDisk();
+		std::string bd_ls(const std::string& p_DirLocation);
+		int bd_mkdir(const std::string& p_DirName);
+		int bd_create(const std::string& p_FileName);
+		int bd_rm(const std::string& p_Filename);
 
-	// Méthodes demandées
-	int bd_FormatDisk();
-	std::string bd_ls(const std::string& p_DirLocation);
-	int bd_mkdir(const std::string& p_DirName);
-	int bd_create(const std::string& p_FileName);
-	int bd_rm(const std::string& p_Filename);
+		// Vous pouvez ajouter ici d'autres méthodes publiques
 
-	// Vous pouvez ajouter ici d'autres méthodes publiques
+	private:
+		// Il est interdit de modifier ce modèle d'implémentation (i.e le type de m_blockDisque)!
+		std::vector<Block> m_blockDisque; // Un vecteur de blocs représentant le disque virtuel
 
-private:
-	// Il est interdit de modifier ce modèle d'implémentation (i.e le type de m_blockDisque)!
-    std::vector<Block> m_blockDisque; // Un vecteur de blocs représentant le disque virtuel
-
-    // Vous pouvez ajouter ici des méthodes privées
-};
+		// Vous pouvez ajouter ici des méthodes privées
+	};
 
 }//Fin du namespace
 
