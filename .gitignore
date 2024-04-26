@@ -3,6 +3,7 @@ disqueVirtuel.o
 main.o
 ufs
 Testperso
+results.txt
 
 .vscode
 .vscode/*
