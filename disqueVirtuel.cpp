@@ -121,7 +121,7 @@ namespace TP3
 			}
 		}
 		// On init le repo racine i-node 1
-		m_blockDisque[5].m_inode = new iNode(ROOT_INODE, S_IFDIR, 1, 56, 0); 	//1 entr/ taille 56octes (deux liens)
+		m_blockDisque[5].m_inode = new iNode(ROOT_INODE, S_IFDIR, 2, 56, 0); 	//1 entr/ taille 56octes (deux liens)
 		m_blockDisque[5].m_dirEntry = std::vector<dirEntry *>(2);
 		m_blockDisque[5].m_dirEntry[0] = new dirEntry(ROOT_INODE, ".");
 		m_blockDisque[5].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
