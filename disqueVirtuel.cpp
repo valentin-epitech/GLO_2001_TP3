@@ -139,7 +139,7 @@ namespace TP3
 				std::cout << "ERREUR : L'argument n'est pas un dossier !" << std::endl;
 				return "";
 			} else {
-				// Affichage pour la commande ls
+				return "";
 				// Cette partie était pour effectuer un ls dans les sous dossiers
 				// du root, mais n'est pas fonctionnelle. Nous l'avons laissé ici
 				// pour vous donner une idée de notre logique cherchée, même si
@@ -226,8 +226,9 @@ namespace TP3
 					m_blockDisque[premierLibreInode + 4].m_inode->st_size += 56;
 					m_blockDisque[5].m_inode->st_nlink += 1;
 				} else {
-					// Partie partiellement fonctionelle et non-utilisée, puisque nous
-					// avons eu des difficultées a localiser les sous dossiers.
+					return 0;
+					// Partie partiellement fonctionelle et non-utilisée pour éviter des crashs
+					// puisque nous avons eu des difficultées a localiser les sous dossiers.
 					std::cout << "Dossier '" << ChildFileName << "' créé dans un dossier parent : " << parentFileName << std::endl;
 					auto parentSelect = SelectBlock(parentFileName);
 
@@ -288,8 +289,9 @@ namespace TP3
 					m_blockDisque[5].m_inode->st_size += 28;
 					m_blockDisque[5].m_inode->st_nlink += 1;
 				} else {
-					// Cas patiellement fonctionnnel non-utilisé pour
-					// les sous dossiers des dossiers autres que le root
+					return 0;
+					// Partie partiellement fonctionelle et non-utilisée pour éviter des crashs
+					// puisque nous avons eu des difficultées a aller cherhcer les fichiers en dehors du root.
 					std::cout << "Fichier '" << ChildFileName << "' créé dans un dossier parent : " << parentFileName << std::endl;
 					auto parentSelect = SelectBlock(parentFileName);
 					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(parentSelect->m_inode->st_ino, parentSelect->m_dirEntry[1]->m_filename);
