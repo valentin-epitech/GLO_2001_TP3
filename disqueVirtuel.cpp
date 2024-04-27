@@ -56,13 +56,11 @@ namespace TP3
 		std::vector<std::string> path;
 		std::string token;
 		std::istringstream tokenStream(Location);
-		// std::cout << "Location: '" << Location << "'" << std::endl;
 
 		while (std::getline(tokenStream, token, '/')) {
 			// Ajouter le token (élément) au vecteur
 			if (token != "") {
 				path.push_back(token);
-				// std::cout << "Partie du path trouvée : '" << token << "'" << std::endl;
 			} else {
 				continue;
 			}
@@ -70,15 +68,16 @@ namespace TP3
 		}
 
 		auto rootdir = m_blockDisque[5].m_dirEntry;
-		// auto rootdir = m_blockDisque[5].m_dirEntry;
 		bool Found = false;
 		int SelectIndex = 0;
+
 		for (int i = 0; i < path.size(); i++)
 		{
-			// std::cout << "\ni : " << i << " path.size() : " << path.size() << std::endl;
 			for (int j = 0; j < rootdir.size(); j++)
 			{
-				// std::cout << "j : " << j << " rootdir.size() : " << rootdir.size() << std::endl;
+				// std::cout << "rootdir.size(): '" << rootdir.size() << "'" << std::endl;
+				// std::cout << "path[i] : " << path[i] << std::endl;
+				// std::cout << "rootdir[j]->m_filename : " << rootdir[j]->m_filename << std::endl;
 				if (rootdir[j]->m_filename == path[i]) {
 					// std::cout << "\nrootdir[" << j << "]->m_filename : '" << rootdir[j]->m_filename << "' path[" << i << "] : '" << path[i] << "'\n" << std::endl;
 					if (i == path.size() - 1) {
@@ -184,17 +183,19 @@ namespace TP3
 				// std::cout << "premierLibreInode: " << premierLibreInode << std::endl;
 				// Ajouter le dossier
 				m_blockDisque[premierLibreInode + 4].m_inode = new iNode(premierLibreInode, S_IFDIR, 1, 0, premierLibreBlock);//2 entr/ taille 56octes (deux liens)
-				m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(3);
+				m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(2);
 				m_blockDisque[premierLibreInode + 4].m_dirEntry[0] = new dirEntry(premierLibreInode, ".");
 				m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[premierLibreBlock] = false;
 				m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode] = false;
 
-				if (parentFileName == ChildFileName) {	// Veut dire qu'il n'y a pas de dossier parents (pas de '/' dans le path donné)
+				if (parentFileName == "")
+					parentFileName = ChildFileName;
+				if (parentFileName == ChildFileName || parentFileName.size() == 0) {	// Veut dire qu'il n'y a pas de dossier parents (pas de '/' dans le path donné)
 					std::cout << "Dossier '" << ChildFileName << "' créé dans le root" << std::endl;
 					//on va chercher le parent
 					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
 					//ajout dans le repo parent
-					m_blockDisque[5].m_dirEntry.push_back(new dirEntry(premierLibreInode, p_DirName));
+					m_blockDisque[5].m_dirEntry.push_back(new dirEntry(premierLibreInode, ChildFileName));
 					m_blockDisque[5].m_inode->st_size += 28;
 					// std::cout << "bd_mkdir += 28" << std::endl;
 					m_blockDisque[premierLibreInode + 4].m_inode->st_size += 56;
@@ -213,15 +214,15 @@ namespace TP3
 					parentSelect->m_dirEntry.push_back(new dirEntry(premierLibreInode, ChildFileName));
 					parentSelect->m_inode->st_size += 56;
 					parentSelect->m_inode->st_nlink += 1;
-					// std::cout << "parentFileName: '" << parentFileName << "'" << std::endl;
-					// std::cout << "Nom du m_dirEntry[0]: '" << parentSelect->m_dirEntry[0]->m_filename << "'" << std::endl;
-					// std::cout << "Nom du m_dirEntry[1]: '" << parentSelect->m_dirEntry[1]->m_filename << "'" << std::endl;
-					// std::cout << "Nom du m_dirEntry[2]: '" << parentSelect->m_dirEntry[2]->m_filename << "'" << std::endl;
+					std::cout << "parentFileName: '" << parentFileName << "'" << std::endl;
+					std::cout << "Nom du m_dirEntry[0]: '" << parentSelect->m_dirEntry[0]->m_filename << "'" << std::endl;
+					std::cout << "Nom du m_dirEntry[1]: '" << parentSelect->m_dirEntry[1]->m_filename << "'" << std::endl;
+					std::cout << "Nom du m_dirEntry[2]: '" << parentSelect->m_dirEntry[2]->m_filename << "'" << std::endl;
 				}
 			};
 			return 1;
 		} else {
-			std::cout << "ERREUR : Le dossier " << p_DirName << "existe déjà." << std::endl;
+			std::cout << "ERREUR : Le dossier " << p_DirName << " existe déjà." << std::endl;
 			return 0;
 		}
 	};
