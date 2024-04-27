@@ -30,6 +30,7 @@ namespace TP3
 	{
 		for(int i = 23; i < N_BLOCK_ON_DISK; i++)
 		{
+			// Parcours la liste des blocs jusqu'a en trouvé un libre
 			if (m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[i] == false) {
 				continue;
 			} else {
@@ -42,6 +43,7 @@ namespace TP3
 	{
 		for(int i = 0; i < N_INODE_ON_DISK; i++)
 		{
+			// Parcours la liste des i-nodes jusqu'a en trouvé un libre
 			if (m_blockDisque[FREE_INODE_BITMAP].m_bitmap[i] == false) {
 				continue;
 			} else {
@@ -58,32 +60,31 @@ namespace TP3
 		std::istringstream tokenStream(Location);
 
 		while (std::getline(tokenStream, token, '/')) {
-			// Ajouter le token (élément) au vecteur
 			if (token != "") {
+				// Sert à trouver si la cible est dans un sous dossier par rapport au root
 				path.push_back(token);
 			} else {
 				continue;
 			}
-
 		}
 
+		// Nos méthodes pour ajouter des sous dossiers dans des dossiers du root ont échouées
+		// Code supprimé, nous laissons la version la plus stable, ou uniquement les fichiers
+		// et sous dossiers du root sont trouvables (m_blockDisque[5]).
 		auto rootdir = m_blockDisque[5].m_dirEntry;
 		bool Found = false;
 		int SelectIndex = 0;
 
+		// Sert a chercher la cible dans le root
 		for (int i = 0; i < path.size(); i++)
 		{
 			for (int j = 0; j < rootdir.size(); j++)
 			{
-				// std::cout << "rootdir.size(): '" << rootdir.size() << "'" << std::endl;
-				// std::cout << "path[i] : " << path[i] << std::endl;
-				// std::cout << "rootdir[j]->m_filename : " << rootdir[j]->m_filename << std::endl;
 				if (rootdir[j]->m_filename == path[i]) {
-					// std::cout << "\nrootdir[" << j << "]->m_filename : '" << rootdir[j]->m_filename << "' path[" << i << "] : '" << path[i] << "'\n" << std::endl;
 					if (i == path.size() - 1) {
-						// std::cout << "Fichier/Dossier trouvé dans un dossier parent : " << path[i] << std::endl;
 						Found = true;
 					}
+					// +4 car les 4 premiers i-nodes doivent être laissés libres
 					SelectIndex = rootdir[j]->m_iNode + 4;
 					rootdir = m_blockDisque[rootdir[j]->m_iNode + 4].m_dirEntry;
 					break;
@@ -91,36 +92,36 @@ namespace TP3
 			}
 		}
 		if (!Found) {
-			// std::cout << "Le dossier/fichier n'existe pas encore" << std::endl;
+			// Aucun dossier trouvé : return NULL
 			return NULL;
 		} else {
-			// std::cout << "Le dossier/fichier existe, return Block" << std::endl;
+			// Fichier ou dossier trouvé : return son adresse de bloc
 			return &m_blockDisque[SelectIndex];
 		}
 	}
 	// Méthodes demandées
 	int DisqueVirtuel::bd_FormatDisk() {
 
-		//Init la bitmap des bloc libres
-		m_blockDisque[FREE_BLOCK_BITMAP].m_type_donnees = S_IFBL; //on met la valeur 0010 dans le block 2
-		m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap = std::vector<bool>(N_BLOCK_ON_DISK, true);//on met une bitmap initialis/ a free partout
-		//Init la bitmap des i-nodes
-		m_blockDisque[FREE_INODE_BITMAP].m_type_donnees = S_IFIL; //on met la valeur 0020 dans le block 3
-		m_blockDisque[FREE_INODE_BITMAP].m_bitmap = std::vector<bool>(N_INODE_ON_DISK, true);//on met une bitmap initialis/ a free partout
-		m_blockDisque[FREE_INODE_BITMAP].m_bitmap[0] = false;//premier element est faux (boot)
-		m_blockDisque[FREE_INODE_BITMAP].m_bitmap[1] = false;//deuxième element est faux (superblock)
+		// Init la bitmap des bloc libres
+		m_blockDisque[FREE_BLOCK_BITMAP].m_type_donnees = S_IFBL;	 //on met la valeur 0010 dans le block 2
+		m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap = std::vector<bool>(N_BLOCK_ON_DISK, true);	//on met une bitmap initialis/ a free partout
+		// Init la bitmap des i-nodes
+		m_blockDisque[FREE_INODE_BITMAP].m_type_donnees = S_IFIL;	 //on met la valeur 0020 dans le block 3
+		m_blockDisque[FREE_INODE_BITMAP].m_bitmap = std::vector<bool>(N_INODE_ON_DISK, true);	//on met une bitmap initialis/ a free partout
+		m_blockDisque[FREE_INODE_BITMAP].m_bitmap[0] = false;	//premier element est faux (boot)
+		m_blockDisque[FREE_INODE_BITMAP].m_bitmap[1] = false;	//deuxième element est faux (superblock)
 
-		//On set tous les block 0 a 23 comme occupe et l on cree un i-node
+		// On set tous les block 0 a 23 comme occupe et l on cree un i-node
 		for (int i = 0; i < 24; i++)
 		{
 			m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[i] = false;
 			if (i > 3) {
 				m_blockDisque[i].m_type_donnees = S_IFIN;
-				m_blockDisque[i].m_inode = new iNode(i - 4, S_IFREG, 0, 0, 0); //par defaut on dit que cest des fichiers S_IFRED
+				m_blockDisque[i].m_inode = new iNode(i - 4, S_IFREG, 0, 0, 0);	//par defaut on dit que cest des fichiers S_IFRED
 			}
 		}
-		//on init le repo racine i-node 1
-		m_blockDisque[5].m_inode = new iNode(ROOT_INODE, S_IFDIR, 1, 56, 0);//1 entr/ taille 56octes (deux liens)
+		// On init le repo racine i-node 1
+		m_blockDisque[5].m_inode = new iNode(ROOT_INODE, S_IFDIR, 1, 56, 0); 	//1 entr/ taille 56octes (deux liens)
 		m_blockDisque[5].m_dirEntry = std::vector<dirEntry *>(2);
 		m_blockDisque[5].m_dirEntry[0] = new dirEntry(ROOT_INODE, ".");
 		m_blockDisque[5].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
@@ -129,6 +130,8 @@ namespace TP3
 	};
 
 	std::string DisqueVirtuel::bd_ls(const std::string& p_DirLocation) {
+		// Sélectionne le block correspondant au dossier cible
+		// Si pas trouvé --> return une chaine vide
 		auto blocDossier = SelectBlock(p_DirLocation);
 		if (blocDossier != NULL) {
 			// std::cout << "p_DirLocation: '" << p_DirLocation<< "'" << std::endl;
@@ -136,6 +139,8 @@ namespace TP3
 				std::cout << "ERREUR : L'argument n'est pas un dossier !" << std::endl;
 				return "";
 			} else {
+				// Cette partie était pour effectuer un ls dans les sous dossiers
+				// du root, mais n'est pas fonctionnelle.
 				std::cout << p_DirLocation << std::endl;
 				for (int i = 0; i < blocDossier->m_dirEntry.size(); i++)
 				{
@@ -155,7 +160,9 @@ namespace TP3
 			}
 			return "";
 		} else {
-			// std::cout << "p_DirLocation2: '" << p_DirLocation<< "'" << std::endl;
+			// Fonctionnel, cherche directement les informations du bloc root,
+			// avec m_blockDisque[5], qui correspond au bloc root.
+			std::cout << p_DirLocation << std::endl;
 			for (auto element : m_blockDisque[5].m_dirEntry)
 			{
 				auto directoryOrFile = SelectBlock(element->m_filename);
@@ -174,54 +181,63 @@ namespace TP3
 	};
 
 	int DisqueVirtuel::DisqueVirtuel::bd_mkdir(const std::string& p_DirName) {
+		// Vérifie si le dossier est déja existant.
+		// Si le dossier existe, la fonction return 0.
 		if (SelectBlock(p_DirName) == NULL) {
+			// Vérification si la cible est dans un sous dossier ou non.
 			int indexSub = p_DirName.find_last_of("/");
 			auto parentFileName = p_DirName.substr(0, indexSub);
 			auto ChildFileName = p_DirName.substr(indexSub + 1);
-			int premierLibreBlock = firstBlockFree();
 
+			// Cherche le premier bloc libre por y assigner des variables.
+			int premierLibreBlock = firstBlockFree();
 			if (premierLibreBlock != 0) {
+				// Cherche la première i-node libre por y assigner des variables.
 				int premierLibreInode = firstInodeFree();
-				// std::cout << "premierLibreInode: " << premierLibreInode << std::endl;
-				// Ajouter le dossier
+
+				// Mise en place du nouveau dossier
 				m_blockDisque[premierLibreInode + 4].m_inode = new iNode(premierLibreInode, S_IFDIR, 1, 0, premierLibreBlock);//2 entr/ taille 56octes (deux liens)
 				m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(2);
 				m_blockDisque[premierLibreInode + 4].m_dirEntry[0] = new dirEntry(premierLibreInode, ".");
+
+				// Saisie des blocs et des i-nodes
 				m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[premierLibreBlock] = false;
 				std::cout << "UFS: Saisie block " << premierLibreBlock << std::endl;
 				m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode] = false;
-				std::cout << "UFS: Saisie inode " << premierLibreInode << std::endl;
+				std::cout << "UFS: Saisie i-node " << premierLibreInode << std::endl;
 
+				// Vérification pas très propre pour savoir si la cible st dans un
+				// sous dossier ou non, en utilisant les précédentes variables
 				if (parentFileName == "")
 					parentFileName = ChildFileName;
-				if (parentFileName == ChildFileName || parentFileName.size() == 0) {	// Veut dire qu'il n'y a pas de dossier parents (pas de '/' dans le path donné)
+				if (parentFileName == ChildFileName || parentFileName.size() == 0) {
+					// Veut dire qu'il n'y a pas de dossier parents (pas de '/' dans le path donné)
+					// Partie fonctionelle et utilisée, puisque nous connaissons déjà
+					// le positionnement du bloc root dans le vecteur de blocs
 					std::cout << "Dossier '" << ChildFileName << "' créé dans le root" << std::endl;
-					//on va chercher le parent
+
+					// Ajout de la nouvelle entrée dans le repo root, avec le liens et la taille. 
 					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
-					//ajout dans le repo parent
 					m_blockDisque[5].m_dirEntry.push_back(new dirEntry(premierLibreInode, ChildFileName));
 					m_blockDisque[5].m_inode->st_size += 28;
-					// std::cout << "bd_mkdir += 28" << std::endl;
 					m_blockDisque[premierLibreInode + 4].m_inode->st_size += 56;
 					m_blockDisque[5].m_inode->st_nlink += 1;
 				} else {
+					return 0;
+					// Partie partiellement fonctionelle et non-utilisée pour éviter des crashs
+					// puisque nous avons eu des difficultées a localiser les sous dossiers.
 					std::cout << "Dossier '" << ChildFileName << "' créé dans un dossier parent : " << parentFileName << std::endl;
 					auto parentSelect = SelectBlock(parentFileName);
 					if (parentSelect == NULL) {
 						std::cout << "ERREUR : Le dossier parent " << parentFileName << " n'existe pas" << std::endl;
 						return 0;
 					}
-					//on va chercher le parent
-					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(parentSelect->m_inode->st_ino, parentSelect->m_dirEntry[1]->m_filename);
 
-					//ajout dans le repo parent
+					// Ajout de la nouvelle entrée dans le repo root, avec le liens et la taille.
+					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(parentSelect->m_inode->st_ino, parentSelect->m_dirEntry[1]->m_filename);
 					parentSelect->m_dirEntry.push_back(new dirEntry(premierLibreInode, ChildFileName));
 					parentSelect->m_inode->st_size += 56;
 					parentSelect->m_inode->st_nlink += 1;
-					std::cout << "parentFileName: '" << parentFileName << "'" << std::endl;
-					std::cout << "Nom du m_dirEntry[0]: '" << parentSelect->m_dirEntry[0]->m_filename << "'" << std::endl;
-					std::cout << "Nom du m_dirEntry[1]: '" << parentSelect->m_dirEntry[1]->m_filename << "'" << std::endl;
-					std::cout << "Nom du m_dirEntry[2]: '" << parentSelect->m_dirEntry[2]->m_filename << "'" << std::endl;
 				}
 			};
 			return 1;
@@ -231,8 +247,10 @@ namespace TP3
 		}
 	};
 	int DisqueVirtuel::bd_create(const std::string& p_FileName) {
-
+		// Vérifie si le fichier est déja existant.
+		// Si le fichier existe, la fonction return 0.
 		if (SelectBlock(p_FileName) == NULL) {
+			// Vérification si la cible est dans un sous dossier ou non.
 			int indexSub = p_FileName.find_last_of("/");
 			auto parentFileName = p_FileName.substr(0, indexSub);
 			auto ChildFileName = p_FileName.substr(indexSub + 1);
@@ -243,30 +261,34 @@ namespace TP3
 				return 0;
 			}
 
+			// Cherche le premier bloc libre por y assigner des variables.
 			int premierLibreBlock = firstBlockFree();
-
 			if (premierLibreBlock != 0) {
 				int premierLibreInode = firstInodeFree();
-				//ajouter fichier
+
+				// Mise en place du nouveau fichier
 				m_blockDisque[premierLibreInode + 4].m_inode = new iNode(premierLibreInode, S_IFREG, 1, 0, premierLibreBlock);//2 entr/ taille 56octes (deux liens)
 				m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(2);
 				m_blockDisque[premierLibreInode + 4].m_dirEntry[0] = new dirEntry(premierLibreInode, ChildFileName);
+
+				// Saisie des blocs et des i-nodes
 				m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[premierLibreBlock] = false;
 				std::cout << "UFS: Saisie bloc " << premierLibreBlock << std::endl;
 				m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode] = false;
-				std::cout << "UFS: Saisie inode " << premierLibreInode << std::endl;
+				std::cout << "UFS: Saisie i-node " << premierLibreInode << std::endl;
 
-				//mon edge case parent est root
+				// Même type de structure de fonction que le bd_mkdir
 				if (parentFileName == "") {
+					// Cas fonctionnel pour les sous dossiers du root
 					std::cout << "Fichier '" << ChildFileName << "' créé dans le dossier root" << std::endl;
-					//on va chercher le parent
 					m_blockDisque[premierLibreInode + 4].m_dirEntry[1] = new dirEntry(ROOT_INODE, "..");
-					//ajout dans le repo parent
 					m_blockDisque[5].m_dirEntry.push_back(new dirEntry(premierLibreInode, ChildFileName));
 					m_blockDisque[5].m_inode->st_size += 28;
-					// std::cout << "bd_create += 28" << std::endl;
 					m_blockDisque[5].m_inode->st_nlink += 1;
 				} else {
+					return 0;
+					// Partie partiellement fonctionelle et non-utilisée pour éviter des crashs
+					// puisque nous avons eu des difficultées a aller cherhcer les fichiers en dehors du root.
 					std::cout << "Fichier '" << ChildFileName << "' créé dans un dossier parent : " << parentFileName << std::endl;
 					auto parentSelect = SelectBlock(parentFileName);
 					//on va chercher le parent
@@ -286,11 +308,14 @@ namespace TP3
 	};
 	int DisqueVirtuel::bd_rm(const std::string& p_Filename) {
 		auto fichierBloc = SelectBlock(p_Filename);
+		// Véfifie si le fichier ou dossier existe bien
+		// Si il n'existe pas, return 0.
 		if (fichierBloc != NULL) {
+			// Vérifications si la cible est dans un sous dossier.
 			int indexSub = p_Filename.find_last_of("/");
 			auto parentFileName = p_Filename.substr(0, indexSub);
-			// std::cout << "Dossier parent détecté : " << parentFileName << std::endl;
 
+			// Si la cible est dans un sous dossier, vérification que le path existe
 			if (parentFileName != "" && SelectBlock(parentFileName) == NULL) {
 				std::cout << "ERREUR : Le dossier parent " << parentFileName << " n'existe pas." << std::endl;
 				return 0;
@@ -303,7 +328,7 @@ namespace TP3
 
 			m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[inodeNumber] = true;
 			std::cout << "UFS: Relache bloc " << inodeNumber << std::endl;
-			std::cout << "UFS: inode size " << m_blockDisque[inodeNumber].m_inode->st_size << std::endl;
+			std::cout << "UFS: i-node size " << m_blockDisque[inodeNumber].m_inode->st_size << std::endl;
 			m_blockDisque[FREE_INODE_BITMAP].m_bitmap[inodeNumber] = true;
 			std::cout << "UFS: Relache i-node " << inodeNumber << std::endl;
 			// Efface le l'entrée du fichier dans le dossier parent (ici root)
