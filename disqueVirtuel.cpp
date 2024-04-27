@@ -338,7 +338,7 @@ namespace TP3
 
 			return 1;
 		} else {
-			std::cout << "ERREUR : Le fichier " << p_Filename << "n'existe pas." << std::endl;
+			std::cout << "ERREUR : Le fichier " << p_Filename << " n'existe pas." << std::endl;
 			return 0;
 		}
 	};
