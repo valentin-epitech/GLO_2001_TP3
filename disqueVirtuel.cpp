@@ -186,7 +186,9 @@ namespace TP3
 				m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(2);
 				m_blockDisque[premierLibreInode + 4].m_dirEntry[0] = new dirEntry(premierLibreInode, ".");
 				m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[premierLibreBlock] = false;
+				std::cout << "UFS: Saisie block " << premierLibreBlock << std::endl;
 				m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode] = false;
+				std::cout << "UFS: Saisie inode " << premierLibreInode << std::endl;
 
 				if (parentFileName == "")
 					parentFileName = ChildFileName;
@@ -248,7 +250,9 @@ namespace TP3
 				m_blockDisque[premierLibreInode + 4].m_dirEntry = std::vector<dirEntry *>(2);
 				m_blockDisque[premierLibreInode + 4].m_dirEntry[0] = new dirEntry(premierLibreInode, ChildFileName);
 				m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[premierLibreBlock] = false;
+				std::cout << "UFS: Saisie bloc " << premierLibreBlock << std::endl;
 				m_blockDisque[FREE_INODE_BITMAP].m_bitmap[premierLibreInode] = false;
+				std::cout << "UFS: Saisie inode " << premierLibreInode << std::endl;
 
 				//mon edge case parent est root
 				if (parentFileName == "") {
@@ -283,7 +287,6 @@ namespace TP3
 		if (fichierBloc != NULL) {
 			int indexSub = p_Filename.find_last_of("/");
 			auto parentFileName = p_Filename.substr(0, indexSub);
-			// auto ChildFileName = p_Filename.substr(indexSub + 1);
 			// std::cout << "Dossier parent détecté : " << parentFileName << std::endl;
 
 			if (parentFileName != "" && SelectBlock(parentFileName) == NULL) {
@@ -291,14 +294,14 @@ namespace TP3
 				return 0;
 			}
 
-			// Efface les données du fichier
+			// Réinitialise les données du bloc et ses i-nodes
 			size_t inodeNumber = fichierBloc->m_inode->st_ino;
-			std::cout << "inodeNumber: " << inodeNumber << std::endl;
-			m_blockDisque[inodeNumber] = true;
 			m_blockDisque[inodeNumber].m_type_donnees = S_IFIN;
 			m_blockDisque[inodeNumber].m_inode = new iNode(inodeNumber, S_IFREG, 0, 0, 0);
 			m_blockDisque[FREE_BLOCK_BITMAP].m_bitmap[inodeNumber] = true;
+			std::cout << "UFS: Relache bloc " << inodeNumber << std::endl;
 			m_blockDisque[FREE_INODE_BITMAP].m_bitmap[inodeNumber] = true;
+			std::cout << "UFS: Relache i-node " << inodeNumber << std::endl;
 			// Efface le l'entrée du fichier dans le dossier parent (ici root)
 			m_blockDisque[5].m_dirEntry.erase(std::next(m_blockDisque[5].m_dirEntry.begin(), inodeNumber), std::next(m_blockDisque[5].m_dirEntry.begin(), inodeNumber + 1));
 			m_blockDisque[5].m_inode->st_size -= 28;
